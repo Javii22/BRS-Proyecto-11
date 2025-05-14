@@ -1,0 +1,32 @@
+---
+- name: Instalar Infection Monkey AppImage
+  hosts: localhost
+  become: yes
+  tasks:
+
+    - name: Instalar libfuse2
+      apt:
+        name: libfuse2
+        state: present
+        update_cache: yes
+
+    - name: Descargar Infection Monkey AppImage
+      get_url:
+        url: "https://github.com/guardicore/monkey/releases/download/v2.3.0/InfectionMonkey-v2.3.0.AppImage"
+        dest: "/tmp/InfectionMonkey-v2.3.0.AppImage"
+
+    - name: Dar permisos de ejecución
+      file:
+        path: "/tmp/InfectionMonkey-v2.3.0.AppImage"
+        mode: '0755'
+
+    - name: Instalar como servicio
+      command: "/tmp/InfectionMonkey-v2.3.0.AppImage service --install --user {{ ansible_user_id }}"
+      args:
+        creates: /etc/systemd/system/infection-monkey.service
+
+    - name: Iniciar servicio
+      systemd:
+        name: infection-monkey
+        state: started
+        enabled: yes
