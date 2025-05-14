@@ -1,32 +1,44 @@
 ---
-- name: Instalar Infection Monkey AppImage
+- name: Desplegar Infection Monkey AppImage
   hosts: localhost
   become: yes
   tasks:
 
-    - name: Instalar libfuse2
+    - name: Asegurar que libfuse2 está instalada
       apt:
         name: libfuse2
         state: present
         update_cache: yes
 
-    - name: Descargar Infection Monkey AppImage
+    - name: Descargar Infection Monkey v2.0.0 AppImage
       get_url:
-        url: "https://github.com/guardicore/monkey/releases/download/v2.3.0/InfectionMonkey-v2.3.0.AppImage"
-        dest: "/tmp/InfectionMonkey-v2.3.0.AppImage"
-
-    - name: Dar permisos de ejecución
-      file:
-        path: "/tmp/InfectionMonkey-v2.3.0.AppImage"
+        url: "https://sourceforge.net/projects/infection-monkey.mirror/files/v2.0.0/InfectionMonkey-v2.0.0.AppImage/download"
+        dest: "/opt/InfectionMonkey-v2.0.0.AppImage"
         mode: '0755'
 
-    - name: Instalar como servicio
-      command: "/tmp/InfectionMonkey-v2.3.0.AppImage service --install --user {{ ansible_user_id }}"
-      args:
-        creates: /etc/systemd/system/infection-monkey.service
+    - name: Crear servicio systemd para Infection Monkey
+      copy:
+        dest: /etc/systemd/system/infection-monkey.service
+        content: |
+          [Unit]
+          Description=Infection Monkey Server
+          After=network.target
 
-    - name: Iniciar servicio
+          [Service]
+          ExecStart=/opt/InfectionMonkey-v2.0.0.AppImage
+          WorkingDirectory=/opt
+          Restart=always
+          User=root
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Recargar systemd
+      command: systemctl daemon-reexec
+
+    - name: Habilitar e iniciar el servicio
       systemd:
         name: infection-monkey
-        state: started
         enabled: yes
+        state: started
+
