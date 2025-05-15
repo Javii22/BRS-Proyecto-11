@@ -1,0 +1,5 @@
+name: automatizacion
+title: Perfil de Automatización - Proyecto 11
+version: 1.0.0
+supports:
+  - platform: linux
